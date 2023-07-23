@@ -27,6 +27,16 @@ char* freq_step_strs[] = {"1Hz", "10Hz", "100Hz", "500Hz", "1kHz", "2.5kHz", "5k
 unsigned long freq_step_n = 4;
 long freq_step = freq_steps[freq_step_n];
 
+byte plus_minus_sym[] = {
+  B00100,
+  B00100,
+  B11111,
+  B00100,
+  B00100,
+  B00000,
+  B11111
+};
+
 uint8_t need_refresh = 0;
 
 uint16_t step_addr = 0;
@@ -41,6 +51,7 @@ void setup() {
   lcd.init();
   lcd.backlight();
   lcd.home();
+  lcd.createChar(0, plus_minus_sym);
   // get the step from eeprom
   uint8_t b = EEPROM.read(step_addr);
   if (b != 0xFF) {
@@ -92,7 +103,7 @@ void draw_lcd() {
   lcd.setCursor(0, 0);
   lcd.print("VFO ");
   lcd.print(ptt ? "* " : "  ");
-  lcd.print("S:");
+  lcd.write(0);
   lcd.print(freq_step_strs[freq_step_n]);
   lcd.setCursor(0, 1);
   lcd.print(mhz);
