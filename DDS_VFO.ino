@@ -22,10 +22,12 @@ int phase = 0;
 RotaryEncoder r = RotaryEncoder(2, 3);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 int rotary_button_state = 0;
-long freq_steps[] = {1, 10, 100, 500, 1000, 2500, 5000, 10000};
-char* freq_step_strs[] = {"1Hz", "10Hz", "100Hz", "500Hz", "1kHz", "2.5kHz", "5kHz", "10kHz"};
+long freq_steps[] = {1, 10, 100, 500, 1000, 2500, 5000, 10000, 100000, 1000000};
+char* freq_step_strs[] = {"1Hz", "10Hz", "100Hz", "500Hz", "1kHz", "2.5kHz", "5kHz", "10kHz", "100kHz", "1MHz"};
 unsigned long freq_step_n = 4;
 long freq_step = freq_steps[freq_step_n];
+
+uint8_t need_refresh = 0;
 
 uint16_t step_addr = 0;
 uint16_t freq_addr = 1;
@@ -54,21 +56,25 @@ void setup() {
 }
 
 void loop() {
+  need_refresh = 0;
   int state = digitalRead(ROTARY_BUTTON_PIN);
   ptt = digitalRead(PTT_PIN);
   if (state == LOW) {
     freq_step_n = (freq_step_n + 1) % (sizeof(freq_steps)/sizeof(long));
     freq_step = freq_steps[freq_step_n];
-    draw_lcd();
+    need_refresh = 1;
     EEPROM.update(step_addr, freq_step_n);
   }
   if (old_freq != freq) {
     DDS.setfreq(freq, phase);
     old_freq = freq;
-    draw_lcd();
+    need_refresh = 1;
   }
   if (ptt != old_ptt) {
     old_ptt = ptt;
+    need_refresh = 1;
+  }
+  if (need_refresh) {
     draw_lcd();
   }
   delay(200);
@@ -78,6 +84,10 @@ void draw_lcd() {
   unsigned long mhz = freq / M;
   unsigned long khz = freq % M / K;
   unsigned long hz = freq % M - khz * K;
+  char hz_buffer[4];
+  char khz_buffer[4];
+  snprintf(hz_buffer, 4, "%03d", hz);
+  snprintf(khz_buffer, 4, "%03d", khz);
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("VFO ");
@@ -87,17 +97,9 @@ void draw_lcd() {
   lcd.setCursor(0, 1);
   lcd.print(mhz);
   lcd.print(".");
-  if (khz) {
-    lcd.print(khz);
-  } else {
-    lcd.print("000");
-  }
+  lcd.print(khz_buffer);
   lcd.print(" ");
-  if (hz) {
-    lcd.print(hz);
-  } else {
-    lcd.print("000");
-  }
+  lcd.print(hz_buffer);
   lcd.print(" MHz");
 }
 
