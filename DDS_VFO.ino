@@ -22,9 +22,9 @@ int phase = 0;
 RotaryEncoder r = RotaryEncoder(2, 3);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 int rotary_button_state = 0;
-long freq_steps[] = {500, 1000, 2500, 5000};
-char* freq_step_strs[] = {"500Hz", "1kHz", "2.5kHz", "5kHz"};
-unsigned long freq_step_n = 1;
+long freq_steps[] = {1, 10, 100, 500, 1000, 2500, 5000, 10000};
+char* freq_step_strs[] = {"1Hz", "10Hz", "100Hz", "500Hz", "1kHz", "2.5kHz", "5kHz", "10kHz"};
+unsigned long freq_step_n = 4;
 long freq_step = freq_steps[freq_step_n];
 
 uint16_t step_addr = 0;
@@ -57,14 +57,13 @@ void loop() {
   int state = digitalRead(ROTARY_BUTTON_PIN);
   ptt = digitalRead(PTT_PIN);
   if (state == LOW) {
-    freq_step_n = (freq_step_n + 1) % 4;
+    freq_step_n = (freq_step_n + 1) % (sizeof(freq_steps)/sizeof(long));
     freq_step = freq_steps[freq_step_n];
     draw_lcd();
     EEPROM.update(step_addr, freq_step_n);
   }
   if (old_freq != freq) {
     DDS.setfreq(freq, phase);
-    Serial.println(freq);
     old_freq = freq;
     draw_lcd();
   }
