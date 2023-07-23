@@ -1,0 +1,4 @@
+7mm hole for rotary encoder
+7mm hole for pushbutton switches
+
+24mm x 71.25mm for lcd
