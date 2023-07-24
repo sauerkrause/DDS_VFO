@@ -73,12 +73,8 @@ void setup() {
 void init_band_edges() {
   for(size_t i = 0; i < sizeof(bands); ++i) {
     int eeprom_addr = i << 3;
-    Serial.println(eeprom_addr);
-    Serial.println(eeprom_addr+4);
     EEPROM.get(eeprom_addr, band_edges[i << 1]);
     EEPROM.get(eeprom_addr + 4, band_edges[(i << 1) + 1]);
-    Serial.println(band_edges[i << 1]);
-    Serial.println(band_edges[(i << 1)+1]);
   }
 }
 
@@ -99,38 +95,32 @@ void determine_band() {
 }
 
 void handle_button(unsigned int button) {
-    Serial.print(button);
-    Serial.print(':');
-    Serial.println(button_states[button]);
     switch(button) {
       case 0:
-      break;
+        break;
       case 1:
         band_down();
-      break;
+        break;
       case 2:
         band_up();
-      break;
+        break;
       case 3:
         freq_step_n = (freq_step_n - 1);
         if (freq_step_n < 0)
           freq_step_n = (sizeof(freq_steps) >> 2) - 1;
         freq_step = freq_steps[freq_step_n];
-      break;
+        break;
       case 4:
         freq_step_n = (freq_step_n + 1) % (sizeof(freq_steps) >> 2);
         freq_step = freq_steps[freq_step_n];
-      break;
+        break;
     }
-    Serial.println(freq_step_n);
-    Serial.println(freq_step);
     need_refresh = true;
 }
 
 void band_down() {
   long last_freq = 0;
   for (size_t i = 0; i < sizeof(band_edges) >> 2; ++i) {
-    Serial.println(band_edges[i]);
     if (freq > band_edges[i]) {
       last_freq = band_edges[i];
     } else {
@@ -143,7 +133,6 @@ void band_down() {
 void band_up() {
   long last_freq = 30*M;
   for (size_t i = (sizeof(band_edges) >> 2) - 1; i >= 0; --i) {
-    Serial.println(band_edges[i]);
     if (freq < band_edges[i]) {
       last_freq = band_edges[i];
     } else {
@@ -159,11 +148,6 @@ void loop() {
   for (size_t i = 0; i < num_buttons; ++i) {
     int state = digitalRead(BUTTON_PINS[i]);
     if (state == LOW){
-      Serial.print(i);
-      Serial.print(':');
-      Serial.print(button_states[i]);
-      Serial.print("->");
-      Serial.println(state);
       button_states[i] = state;
       handle_button(i);
     }
